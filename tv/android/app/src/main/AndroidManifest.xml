@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" tools:replace="android:minSdkVersion" />
+    <uses-sdk tools:overrideLibrary="com.alexmercerind.media_kit_video, com.alexmercerind.media_kit_libs_video, com.alexmercerind.media_kit" />
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="tv"
