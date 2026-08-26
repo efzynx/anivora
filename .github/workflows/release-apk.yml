@@ -9,7 +9,6 @@ jobs:
   build-and-release:
     name: Build Signed Android TV APK & Publish GitHub Release
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
 
@@ -17,33 +16,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          version: 9.15.4
+          channel: 'stable'
 
-      - name: Install Monorepo Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build Shared Types & Database
+      - name: Build Android TV Release APK
         run: |
-          pnpm --filter=@anivora/types run build
-          pnpm --filter=@anivora/database run generate
-          pnpm --filter=@anivora/database run build
+          cd tv
+          flutter pub get
+          # Menggunakan domain Cloudflare Anda secara otomatis melalui --dart-define
+          flutter build apk --release --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
 
       - name: Extract Version from Tag
         id: get_version
@@ -51,43 +40,16 @@ jobs:
           TAG=${GITHUB_REF#refs/tags/}
           VERSION=${TAG#v}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          # Calculate incrementing version code based on run number or timestamp
           VERSION_CODE=${{ github.run_number }}
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
-
-      - name: Create Dummy Debug Keystore if Upload Keystore is absent
-        run: |
-          cd apps/tv/android/app
-          if [ ! -f debug.keystore ]; then
-            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          fi
-
-      - name: Build Android TV Release APKs (Universal & Split ABIs)
-        run: |
-          cd apps/tv/android
-          chmod +x ./gradlew || true
-          gradle wrapper
-          ./gradlew assembleRelease -PVERSION_NAME=${{ steps.get_version.outputs.VERSION }} -PVERSION_CODE=${{ steps.get_version.outputs.VERSION_CODE }} --no-daemon
 
       - name: Collect and Rename APKs
         id: collect_apks
         run: |
           mkdir -p release_artifacts
-          APK_DIR="apps/tv/android/app/build/outputs/apk/release"
-          
-          # Find universal or standard release apk
-          find $APK_DIR -name "*.apk" -exec cp {} release_artifacts/ \;
+          cp tv/build/app/outputs/flutter-apk/app-release.apk release_artifacts/anivora-tv-${{ steps.get_version.outputs.VERSION }}.apk
           cd release_artifacts
-          
-          # Rename for clear naming convention
-          for f in *.apk; do
-            mv "$f" "anivora-tv-${{ steps.get_version.outputs.VERSION }}-$f"
-          done
-          
-          # Generate SHA256 checksums
           sha256sum *.apk > checksums.sha256
-          echo "Artifacts generated:"
-          ls -la
 
       - name: Create GitHub Release & Upload APK Assets
         uses: softprops/action-gh-release@v2
@@ -102,11 +64,11 @@ jobs:
           body: |
             ## 📺 ANIVORA Android TV v${{ steps.get_version.outputs.VERSION }} (Build #${{ steps.get_version.outputs.VERSION_CODE }})
 
-            ### ✨ Apa yang baru di versi ini:
-            - **Target Compatibility:** Android 6.0+ (API 23), Amlogic S905/S912 chipset baseline
+            ### ✨ Informasi Build
+            - **Target Server:** `https://anivora.efzyn.my.id/api/v1`
+            - **Kompabilitas:** Android 6.0+ (API 23), Amlogic S905/S912 baseline
             - **Hardware Acceleration:** Native Media3 / ExoPlayer support
             - **Remote Focus Engine:** Full D-Pad Leanback UI
-            - **Supported Architecture:** `armeabi-v7a` (32-bit), `arm64-v8a` (64-bit), Universal APK
 
             ### 📦 SHA-256 Checksums:
             Cek integritas file APK pada file lampiran `checksums.sha256`.
