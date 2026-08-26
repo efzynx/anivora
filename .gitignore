@@ -44,3 +44,4 @@ android/app/debug.keystore
 
 # Prisma
 packages/database/src/generated
+\n# Scratch and AI Agent files\nscratch/\n.gemini/\n*.webm\n
