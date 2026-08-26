@@ -27,37 +27,38 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Patch minSdk via Gradle Init Script
+      - name: Patch Android via Gradle Init Script
         run: |
-          # Flutter 3.x menjalankan "Upgrading build.gradle.kts" DUA KALI:
-          # 1. Saat 'flutter pub get'
-          # 2. Saat 'flutter build apk' (di awal, sebelum Gradle task)
-          # Akibatnya, sed patch yang diterapkan di antara keduanya selalu dibalik.
-          #
-          # Solusi: Gradle Init Script di ~/.gradle/init.d/ yang:
-          # - Tidak bisa disentuh oleh Flutter migration
-          # - Dieksekusi oleh Gradle sendiri di tahap konfigurasi
-          # - Override minSdk SETELAH semua migration Flutter selesai
+          # Flutter 3.x menjalankan "Upgrading build.gradle.kts" DUA KALI
+          # (saat pub get & saat flutter build apk), sehingga sed patch selalu dibalik.
+          # Solusi: Gradle Init Script di ~/.gradle/init.d/ yang tidak bisa disentuh
+          # Flutter migration dan dieksekusi Gradle SETELAH semua migration selesai.
           mkdir -p ~/.gradle/init.d
-          cat > ~/.gradle/init.d/override-minsdk.gradle << 'GRADLE_INIT_EOF'
+          cat > ~/.gradle/init.d/override-android.gradle << 'GRADLE_INIT_EOF'
           allprojects {
             afterEvaluate { project ->
-              // Override minSdk untuk SEMUA Android projects (app + semua library/plugin).
-              // Masalah: wakelock_plus (dan plugin lain) menggunakan flutter.minSdkVersion
-              // di build.gradle mereka → minSdk = 24. Manifest merger akan menolak
-              // karena library declare minSdk 24 tapi app kita hanya 23.
-              // Solusi: override minSdk di SEMUA subproject agar manifest merger konsisten.
               def isAndroidApp = project.plugins.hasPlugin('com.android.application')
               def isAndroidLib = project.plugins.hasPlugin('com.android.library')
               if (isAndroidApp || isAndroidLib) {
+                // Override minSdk=23 untuk semua project (app + semua plugin/library).
+                // Diperlukan agar manifest merger tidak conflict ketika plugin
+                // (wakelock_plus, dll) menggunakan flutter.minSdkVersion=24.
                 project.android.defaultConfig.minSdk = 23
-                println(">>> [override-minsdk] ${project.name}: minSdk dipaksa ke 23")
+                println(">>> [android-patch] ${project.name}: minSdk=23")
+              }
+              if (isAndroidApp) {
+                // Gunakan legacy packaging agar native libs diekstrak ke disk saat install.
+                // Diperlukan untuk firmware Android 6 pada STB (HG680P/Amlogic S905X).
+                // JANGAN set extractNativeLibs="true" di AndroidManifest karena
+                // AGP (Android Gradle Plugin) baru melarang cara tersebut.
+                project.android.packagingOptions.jniLibs.useLegacyPackaging = true
+                println(">>> [android-patch] ${project.name}: useLegacyPackaging=true")
               }
             }
           }
           GRADLE_INIT_EOF
-          echo "=== Init script berhasil dibuat ==="
-          cat ~/.gradle/init.d/override-minsdk.gradle
+          echo "=== Gradle Init Script berhasil dibuat ==="
+          cat ~/.gradle/init.d/override-android.gradle
 
       - name: Build Android TV Release APK
         run: |
@@ -111,7 +112,7 @@ jobs:
 
             ### ✨ Informasi Build
             - **Target Server:** `https://anivora.efzyn.my.id/api/v1`
-            - **Minimum Android:** 5.0+ (API 21) — kompatibel dengan Android 6 (STB HG680P/Amlogic S905X)
+            - **Minimum Android:** 6.0 (API 23) — kompatibel dengan STB HG680P/Amlogic S905X
             - **Target Android:** API 36
             - **Hardware Acceleration:** Native Media3 / ExoPlayer support
             - **Remote Focus Engine:** Full D-Pad Leanback UI
@@ -119,15 +120,14 @@ jobs:
             ### 📦 Pilihan APK
             | File | Arsitektur | Keterangan |
             |------|-----------|------------|
-            | `anivora-tv-*-arm64.apk` | ARM 64-bit | STB modern: HG680P, S905X, S912, dll |
-            | `anivora-tv-*-arm32.apk` | ARM 32-bit | STB lama: S805, S905, dll |
+            | `anivora-tv-*-arm64.apk` | ARM 64-bit | STB modern: HG680P (64-bit firmware) |
+            | `anivora-tv-*-arm32.apk` | ARM 32-bit | **STB HG680P (32-bit firmware) ← coba ini dulu** |
             | `anivora-tv-*-x86_64.apk` | x86 64-bit | Emulator / Android TV Intel |
-            | `anivora-tv-*-universal.apk` | Semua arsitektur | **Gunakan ini jika tidak tahu arsitektur STB** (ukuran lebih besar) |
+            | `anivora-tv-*-universal.apk` | Semua arsitektur | **Gunakan ini jika tidak tahu arsitektur STB** |
 
-            > ⚠️ **Jika muncul "Parse Error" saat install:** Gunakan file `universal.apk` atau pastikan memilih APK yang sesuai arsitektur STB Anda.
+            > ⚠️ **HG680P/Amlogic S905X:** Meskipun chip 64-bit, banyak firmware menggunakan Android 32-bit. Coba `arm32.apk` terlebih dahulu.
 
             ### 🔐 SHA-256 Checksums:
             Cek integritas file APK pada file lampiran `checksums.sha256`.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

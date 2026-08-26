@@ -52,12 +52,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
-# Override transitive dependency wakelock_plus ke versi yang kompatibel dengan Android 6.
-# wakelock_plus 1.1.6 (dari media_kit_video) mendeklarasikan minSdk 24 dan
-# kemungkinan menggunakan Android API yang tidak tersedia di API 23 (Android 6).
-# Versi 1.1.4 masih support Android 6 / API 21+.
+# Pin wakelock_plus ke versi yang kompatibel dengan Android 6 (API 23).
+# wakelock_plus adalah transitive dependency dari media_kit_video.
+# Versi 1.7.0 (terbaru) mungkin menggunakan API Android yang tidak ada di Android 6.
+# Tanpa pin ini, ^1.1.4 bisa resolve ke 1.7.0.
 dependency_overrides:
-  wakelock_plus: ^1.1.4
+  wakelock_plus: 1.1.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
