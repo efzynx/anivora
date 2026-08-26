@@ -16,8 +16,8 @@ type Config struct {
 }
 
 func Load() *Config {
-	// Try loading from .env if present
-	_ = godotenv.Load("../.env", ".env")
+	// Load local .env first, fallback to root ../.env
+	_ = godotenv.Load(".env", "../.env")
 
 	port := os.Getenv("PORT")
 	if port == "" {
