@@ -43,12 +43,13 @@ jobs:
           allprojects {
             afterEvaluate { project ->
               if (project.plugins.hasPlugin('com.android.application')) {
-                // Hardcode minSdk=21 untuk kompatibilitas STB Android 6 (API 23)
-                // seperti HG680P / Amlogic S905X.
-                // Flutter 3.x migration selalu reset minSdk ke flutter.minSdkVersion (API 24),
-                // sehingga override harus dilakukan di Gradle level bukan di build.gradle.kts.
-                project.android.defaultConfig.minSdk = 21
-                println(">>> [override-minsdk] minSdk dipaksa ke 21 untuk STB Android 6 compatibility")
+                // Hardcode minSdk=23 untuk kompatibilitas STB Android 6 (API 23) seperti HG680P.
+                // - Android 6.0 (Marshmallow) = API 23
+                // - Flutter 3.47.1 minimum yang didukung = API 23
+                // - flutter.minSdkVersion yang di-set Flutter ke build.gradle.kts = API 24
+                // Override ini memastikan APK bisa diinstall di Android 6 tanpa error.
+                project.android.defaultConfig.minSdk = 23
+                println(">>> [override-minsdk] minSdk dipaksa ke 23 untuk STB Android 6 (API 23) compatibility")
               }
             }
           }
@@ -61,10 +62,15 @@ jobs:
           cd tv
           flutter pub get
           # Build split-per-abi: lebih kecil ukurannya, pilih sesuai arsitektur STB
-          flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
+          # --android-skip-build-dependency-validation: bypass DependencyValidationException
+          # dari Flutter Gradle plugin saat minSdk lebih rendah dari flutter.minSdkVersion
+          flutter build apk --release --split-per-abi \
+            --android-skip-build-dependency-validation \
+            --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
           # Build universal APK: satu file untuk semua arsitektur (arm32, arm64, x86_64)
-          # Cocok untuk STB yang tidak diketahui arsitekturnya, ukuran lebih besar
-          flutter build apk --release --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
+          flutter build apk --release \
+            --android-skip-build-dependency-validation \
+            --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
 
       - name: Extract Version from Tag
         id: get_version
