@@ -49,10 +49,17 @@ go build -o anivora-server ./cmd/server
 
 # 4. Setup .env
 echo "[4/5] Membuat file konfigurasi (.env)..."
-cat <<EOF > .env
 PORT=3000
+while ss -tuln | grep -q ":$PORT "; do
+    echo "Port $PORT sedang digunakan, mencoba port $((PORT+1))..."
+    PORT=$((PORT+1))
+done
+
+cat <<EOF > .env
+PORT=$PORT
 ENV=production
 EOF
+echo "Menggunakan PORT: $PORT"
 
 # 5. Create Systemd Service
 echo "[5/5] Membuat Systemd Service agar berjalan di latar belakang..."
@@ -79,7 +86,7 @@ sudo systemctl enable anivora
 sudo systemctl restart anivora
 
 echo "========================================="
-echo "✅ Setup Selesai! Server berjalan di port 3000."
+echo "✅ Setup Selesai! Server berjalan di port $PORT."
 echo "Untuk mengecek log server, jalankan:"
 echo "sudo journalctl -u anivora -f"
 echo "========================================="
@@ -89,7 +96,8 @@ read -p "Apakah Anda ingin menginstall Cloudflare Tunnel sekarang? (y/n): " INST
 if [[ "$INSTALL_CF" == "y" || "$INSTALL_CF" == "Y" ]]; then
     if ! command -v cloudflared &> /dev/null; then
         echo "Menginstall cloudflared..."
-        curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        CF_ARCH=$(dpkg --print-architecture)
+        curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${CF_ARCH}.deb
         sudo dpkg -i cloudflared.deb
         rm cloudflared.deb
     fi
