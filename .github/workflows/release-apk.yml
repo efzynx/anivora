@@ -27,21 +27,39 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Patch minSdk via Gradle Init Script
+        run: |
+          # Flutter 3.x menjalankan "Upgrading build.gradle.kts" DUA KALI:
+          # 1. Saat 'flutter pub get'
+          # 2. Saat 'flutter build apk' (di awal, sebelum Gradle task)
+          # Akibatnya, sed patch yang diterapkan di antara keduanya selalu dibalik.
+          #
+          # Solusi: Gradle Init Script di ~/.gradle/init.d/ yang:
+          # - Tidak bisa disentuh oleh Flutter migration
+          # - Dieksekusi oleh Gradle sendiri di tahap konfigurasi
+          # - Override minSdk SETELAH semua migration Flutter selesai
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/override-minsdk.gradle << 'GRADLE_INIT_EOF'
+          allprojects {
+            afterEvaluate { project ->
+              if (project.plugins.hasPlugin('com.android.application')) {
+                // Hardcode minSdk=21 untuk kompatibilitas STB Android 6 (API 23)
+                // seperti HG680P / Amlogic S905X.
+                // Flutter 3.x migration selalu reset minSdk ke flutter.minSdkVersion (API 24),
+                // sehingga override harus dilakukan di Gradle level bukan di build.gradle.kts.
+                project.android.defaultConfig.minSdk = 21
+                println(">>> [override-minsdk] minSdk dipaksa ke 21 untuk STB Android 6 compatibility")
+              }
+            }
+          }
+          GRADLE_INIT_EOF
+          echo "=== Init script berhasil dibuat ==="
+          cat ~/.gradle/init.d/override-minsdk.gradle
+
       - name: Build Android TV Release APK
         run: |
           cd tv
           flutter pub get
-
-          # PENTING: Flutter 3.x secara otomatis meng-upgrade build.gradle.kts
-          # saat 'flutter pub get' dijalankan ("Upgrading build.gradle.kts").
-          # Migrasi ini mereset minSdk kembali ke flutter.minSdkVersion (API 24).
-          # Kita patch SETELAH migrasi selesai agar minSdk=21 tetap berlaku
-          # untuk kompatibilitas STB Android 6 (API 23) seperti HG680P / Amlogic S905X.
-          echo "=== Patching minSdk ke 21 (setelah Flutter auto-migration) ==="
-          sed -i 's/minSdk = flutter\.minSdkVersion/minSdk = 21/' android/app/build.gradle.kts
-          echo "=== Verifikasi hasil patch ==="
-          grep "minSdk" android/app/build.gradle.kts
-
           # Build split-per-abi: lebih kecil ukurannya, pilih sesuai arsitektur STB
           flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
           # Build universal APK: satu file untuk semua arsitektur (arm32, arm64, x86_64)
