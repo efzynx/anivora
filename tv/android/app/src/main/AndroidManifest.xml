@@ -1,9 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-sdk tools:overrideLibrary="com.alexmercerind.media_kit_video, com.alexmercerind.media_kit_libs_video, com.alexmercerind.media_kit" />
+    <uses-sdk tools:overrideLibrary="com.alexmercerind.media_kit_video, com.alexmercerind.media_kit_libs_video, com.alexmercerind.media_kit, dev.fluttercommunity.plus.wakelock" />
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="tv"
+        android:label="Anivora"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
