@@ -16,7 +16,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.tv"
-        // Force minSdk to 21 to ensure Android 6 STB compatibility
+        // Hardcode minSdk 21 agar kompatibel dengan STB Android 6 (API 23) seperti HG680P
+        // flutter.minSdkVersion di Flutter versi baru sudah naik ke API 24
         minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

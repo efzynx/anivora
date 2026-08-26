@@ -31,9 +31,11 @@ jobs:
         run: |
           cd tv
           flutter pub get
-          # Menggunakan domain Cloudflare Anda secara otomatis melalui --dart-define
-          # Menggunakan --split-per-abi agar STB (Android 6) tidak error saat parsing APK besar
+          # Build split-per-abi: lebih kecil ukurannya, pilih sesuai arsitektur STB
           flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
+          # Build universal APK: satu file untuk semua arsitektur (arm32, arm64, x86_64)
+          # Cocok untuk STB yang tidak diketahui arsitekturnya, ukuran lebih besar
+          flutter build apk --release --dart-define=API_BASE_URL=https://anivora.efzyn.my.id/api/v1
 
       - name: Extract Version from Tag
         id: get_version
@@ -48,15 +50,19 @@ jobs:
         id: collect_apks
         run: |
           mkdir -p release_artifacts
-          cp tv/build/app/outputs/flutter-apk/app-*-release.apk release_artifacts/
+          # Copy split APKs
+          cp tv/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_artifacts/anivora-tv-${{ github.ref_name }}-arm64.apk
+          cp tv/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_artifacts/anivora-tv-${{ github.ref_name }}-arm32.apk
+          cp tv/build/app/outputs/flutter-apk/app-x86_64-release.apk release_artifacts/anivora-tv-${{ github.ref_name }}-x86_64.apk
+          # Copy universal APK (untuk STB yang tidak diketahui arsitekturnya)
+          cp tv/build/app/outputs/flutter-apk/app-release.apk release_artifacts/anivora-tv-${{ github.ref_name }}-universal.apk
           cd release_artifacts
-          for f in *.apk; do mv "$f" "anivora-tv-${{ steps.get_version.outputs.VERSION }}-$f"; done
           sha256sum *.apk > checksums.sha256
 
       - name: Create GitHub Release & Upload APK Assets
         uses: softprops/action-gh-release@v2
         with:
-          name: "ANIVORA TV v${{ steps.get_version.outputs.VERSION }}"
+          name: "ANIVORA TV ${{ github.ref_name }}"
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
@@ -64,15 +70,27 @@ jobs:
             release_artifacts/*.apk
             release_artifacts/checksums.sha256
           body: |
-            ## 📺 ANIVORA Android TV v${{ steps.get_version.outputs.VERSION }} (Build #${{ steps.get_version.outputs.VERSION_CODE }})
+            ## 📺 ANIVORA Android TV ${{ github.ref_name }} (Build #${{ github.run_number }})
 
             ### ✨ Informasi Build
             - **Target Server:** `https://anivora.efzyn.my.id/api/v1`
-            - **Kompabilitas:** Android 6.0+ (API 23), Amlogic S905/S912 baseline
+            - **Minimum Android:** 5.0+ (API 21) — kompatibel dengan Android 6 (STB HG680P/Amlogic S905X)
+            - **Target Android:** API 36
             - **Hardware Acceleration:** Native Media3 / ExoPlayer support
             - **Remote Focus Engine:** Full D-Pad Leanback UI
 
-            ### 📦 SHA-256 Checksums:
+            ### 📦 Pilihan APK
+            | File | Arsitektur | Keterangan |
+            |------|-----------|------------|
+            | `anivora-tv-*-arm64.apk` | ARM 64-bit | STB modern: HG680P, S905X, S912, dll |
+            | `anivora-tv-*-arm32.apk` | ARM 32-bit | STB lama: S805, S905, dll |
+            | `anivora-tv-*-x86_64.apk` | x86 64-bit | Emulator / Android TV Intel |
+            | `anivora-tv-*-universal.apk` | Semua arsitektur | **Gunakan ini jika tidak tahu arsitektur STB** (ukuran lebih besar) |
+
+            > ⚠️ **Jika muncul "Parse Error" saat install:** Gunakan file `universal.apk` atau pastikan memilih APK yang sesuai arsitektur STB Anda.
+
+            ### 🔐 SHA-256 Checksums:
             Cek integritas file APK pada file lampiran `checksums.sha256`.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
