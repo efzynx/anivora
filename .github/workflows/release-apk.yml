@@ -42,14 +42,16 @@ jobs:
           cat > ~/.gradle/init.d/override-minsdk.gradle << 'GRADLE_INIT_EOF'
           allprojects {
             afterEvaluate { project ->
-              if (project.plugins.hasPlugin('com.android.application')) {
-                // Hardcode minSdk=23 untuk kompatibilitas STB Android 6 (API 23) seperti HG680P.
-                // - Android 6.0 (Marshmallow) = API 23
-                // - Flutter 3.47.1 minimum yang didukung = API 23
-                // - flutter.minSdkVersion yang di-set Flutter ke build.gradle.kts = API 24
-                // Override ini memastikan APK bisa diinstall di Android 6 tanpa error.
+              // Override minSdk untuk SEMUA Android projects (app + semua library/plugin).
+              // Masalah: wakelock_plus (dan plugin lain) menggunakan flutter.minSdkVersion
+              // di build.gradle mereka → minSdk = 24. Manifest merger akan menolak
+              // karena library declare minSdk 24 tapi app kita hanya 23.
+              // Solusi: override minSdk di SEMUA subproject agar manifest merger konsisten.
+              def isAndroidApp = project.plugins.hasPlugin('com.android.application')
+              def isAndroidLib = project.plugins.hasPlugin('com.android.library')
+              if (isAndroidApp || isAndroidLib) {
                 project.android.defaultConfig.minSdk = 23
-                println(">>> [override-minsdk] minSdk dipaksa ke 23 untuk STB Android 6 (API 23) compatibility")
+                println(">>> [override-minsdk] ${project.name}: minSdk dipaksa ke 23")
               }
             }
           }
