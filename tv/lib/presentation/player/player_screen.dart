@@ -10,7 +10,10 @@ import '../../data/models/player_model.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
   final String episodeId;
-  const PlayerScreen({super.key, required this.episodeId});
+  final PlaybackSourceModel? preloadedSource;
+
+  const PlayerScreen({super.key, required this.episodeId, this.preloadedSource});
+
 
   @override
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
@@ -164,8 +167,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   void _showSourcesDialog() {
-    final sourceAsync = ref.read(playbackSourceProvider(widget.episodeId));
-    final currentSource = sourceAsync.valueOrNull ?? _currentSource;
+    PlaybackSourceModel? currentSource = _currentSource;
+    if (widget.preloadedSource == null) {
+      final sourceAsync = ref.read(playbackSourceProvider(widget.episodeId));
+      currentSource = sourceAsync.valueOrNull ?? _currentSource;
+    }
+
     if (currentSource == null) return;
 
     _hideTimer?.cancel();
@@ -181,9 +188,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: currentSource.alternativeSources.length,
+              itemCount: currentSource!.alternativeSources.length,
               itemBuilder: (context, index) {
-                final source = currentSource.alternativeSources[index];
+                final source = currentSource!.alternativeSources[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: TvFocusWrapper(
@@ -263,19 +270,36 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final playbackAsync = ref.watch(playbackSourceProvider(widget.episodeId));
+    final playbackAsync = widget.preloadedSource != null 
+        ? AsyncValue.data(widget.preloadedSource!)
+        : ref.watch(playbackSourceProvider(widget.episodeId));
 
-    ref.listen(playbackSourceProvider(widget.episodeId), (previous, next) {
-      next.whenData((source) {
-        _currentSource = source;
-        if (source.selectedSource != null && !_isDisposing) {
-          final url = source.selectedSource!.streamUrl;
-          if (mounted && !_isDisposing) setState(() => _isBuffering = true);
-          player.open(Media(url));
-          player.play();
-        }
+    if (widget.preloadedSource == null) {
+      ref.listen(playbackSourceProvider(widget.episodeId), (previous, next) {
+        next.whenData((source) {
+          _currentSource = source;
+          if (source.selectedSource != null && !_isDisposing) {
+            final url = source.selectedSource!.streamUrl;
+            if (mounted && !_isDisposing) setState(() => _isBuffering = true);
+            player.open(Media(url));
+            player.play();
+          }
+        });
       });
-    });
+    } else {
+      // For preloaded source, initialize once on build if not set
+      if (_currentSource == null && widget.preloadedSource?.selectedSource != null) {
+        _currentSource = widget.preloadedSource;
+        final url = _currentSource!.selectedSource!.streamUrl;
+        if (mounted && !_isDisposing) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!_isDisposing) setState(() => _isBuffering = true);
+            player.open(Media(url));
+            player.play();
+          });
+        }
+      }
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,

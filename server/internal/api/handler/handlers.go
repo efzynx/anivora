@@ -5,18 +5,21 @@ import (
 	"strconv"
 
 	"github.com/anivora/server/internal/service"
+	"github.com/anivora/server/internal/resolver"
 	"github.com/gin-gonic/gin"
 )
 
 type ApiHandler struct {
 	contentService  *service.ContentService
 	playbackService *service.PlaybackService
+	sankaService    *service.SankaService
 }
 
-func NewApiHandler(contentService *service.ContentService, playbackService *service.PlaybackService) *ApiHandler {
+func NewApiHandler(contentService *service.ContentService, playbackService *service.PlaybackService, sankaService *service.SankaService) *ApiHandler {
 	return &ApiHandler{
 		contentService:  contentService,
 		playbackService: playbackService,
+		sankaService:    sankaService,
 	}
 }
 
@@ -128,4 +131,81 @@ func (h *ApiHandler) GetAllDonghua(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+func (h *ApiHandler) ProxyWebProviders(c *gin.Context) {
+	path := c.Param("path")
+	query := c.Request.URL.Query()
+
+	ctx := c.Request.Context()
+	data, err := h.sankaService.ProxyRequest(ctx, path, query)
+	if err != nil {
+		if err.Error() == "akses ke konten 18+ tidak diizinkan" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json", data)
+}
+
+type ResolveRequestDto struct {
+	Sources []struct {
+		ServerName string `json:"serverName"`
+		Quality    string `json:"quality"`
+		Url        string `json:"url"`
+	} `json:"sources"`
+	EpisodeId string `json:"episodeId"`
+	Title     string `json:"title"`
+}
+
+func (h *ApiHandler) ResolveWebProvider(c *gin.Context) {
+	var dto ResolveRequestDto
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var resolvedSources []resolver.ResolvedStream
+	for _, src := range dto.Sources {
+		res := resolver.Resolve(src.Url, src.ServerName, src.Quality)
+		if res.StreamUrl != "" {
+			resolvedSources = append(resolvedSources, res)
+		}
+	}
+
+	if len(resolvedSources) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "failed to resolve any playable video stream"})
+		return
+	}
+
+	// Priority: choose first HLS direct stream if available, otherwise first stream
+	selected := resolvedSources[0]
+	for _, r := range resolvedSources {
+		if r.IsHLS {
+			selected = r
+			break
+		}
+	}
+
+	var alternatives []resolver.ResolvedStream
+	for _, r := range resolvedSources {
+		if r.StreamUrl != selected.StreamUrl {
+			alternatives = append(alternatives, r)
+		}
+	}
+
+	resp := service.PlaybackResponse{
+		EpisodeID:             dto.EpisodeId,
+		ContentID:             "web_provider_content",
+		ContentTitle:          dto.Title,
+		Title:                 dto.Title,
+		SelectedSource:        selected,
+		AlternativeSources:    alternatives,
+		ResumePositionSeconds: 0,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

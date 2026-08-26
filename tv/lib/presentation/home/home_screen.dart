@@ -101,6 +101,43 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 16),
+                      TvFocusWrapper(
+                        onTap: () {
+                          // Navigate to Web Providers
+                          Navigator.pushNamed(context, '/web_providers');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.blueAccent, Colors.blueAccent.withValues(alpha: 0.7)],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blueAccent.withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.public, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Web Providers',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),

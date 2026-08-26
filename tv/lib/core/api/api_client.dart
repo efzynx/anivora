@@ -71,4 +71,27 @@ class ApiClient {
       throw Exception('Failed to search: $e');
     }
   }
+
+  Future<dynamic> getWebProviderPath(String path) async {
+    try {
+      final response = await _dio.get('/web-providers/$path');
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to load web provider data: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> resolveWebProvider(String episodeId, String title, List<Map<String, dynamic>> sources) async {
+    try {
+      final response = await _dio.post('/web-providers/resolve', data: {
+        'episodeId': episodeId,
+        'title': title,
+        'sources': sources,
+      });
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Failed to resolve web provider stream: $e');
+    }
+  }
 }
+

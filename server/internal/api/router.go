@@ -27,7 +27,8 @@ func SetupRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 
 	contentService := service.NewContentService(db)
 	playbackService := service.NewPlaybackService(db)
-	apiHandler := handler.NewApiHandler(contentService, playbackService)
+	sankaService := service.NewSankaService()
+	apiHandler := handler.NewApiHandler(contentService, playbackService, sankaService)
 
 	v1 := r.Group(cfg.ApiPrefix)
 	{
@@ -47,6 +48,10 @@ func SetupRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 		v1.GET("/episodes/:id/play", apiHandler.ResolvePlayback)
 		v1.POST("/episodes/:id/progress", apiHandler.SyncProgress)
 		v1.GET("/history", apiHandler.GetHistory)
+		
+		// Sanka API Proxy
+		v1.POST("/web-providers/resolve", apiHandler.ResolveWebProvider)
+		v1.GET("/web-providers/*path", apiHandler.ProxyWebProviders)
 	}
 
 	// Health Check

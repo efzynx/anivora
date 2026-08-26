@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/home/home_screen.dart';
+import 'presentation/web_providers/web_providers_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,11 @@ class AnivoraApp extends StatelessWidget {
     return MaterialApp(
       title: 'ANIVORA',
       theme: AppTheme.darkTheme,
-      home: const HomeScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/web_providers': (context) => const WebProvidersScreen(),
+      },
       debugShowCheckedModeBanner: false,
     );
   }
