@@ -20,3 +20,4 @@ server_bin
 *.db-journal
 *.sqlite
 *.sqlite3
+anivora-server
