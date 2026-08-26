@@ -1,0 +1,29 @@
+{
+  "name": "anivora",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ANIVORA - Backend-driven Anime & Donghua streaming platform for Android TV",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --filter=@anivora/types run build && pnpm --filter=@anivora/database run build && pnpm --filter=@anivora/api run build && pnpm --filter=@anivora/worker run build",
+    "dev:api": "pnpm --filter=@anivora/api run start:dev",
+    "dev:worker": "pnpm --filter=@anivora/worker run start:dev",
+    "dev:tv": "pnpm --filter=@anivora/tv-preview run dev",
+    "db:generate": "pnpm --filter=@anivora/database run generate",
+    "db:migrate": "pnpm --filter=@anivora/database run migrate:dev",
+    "db:push": "pnpm --filter=@anivora/database run push",
+    "db:seed": "pnpm --filter=@anivora/database run seed",
+    "db:studio": "pnpm --filter=@anivora/database run studio",
+    "docker:up": "docker compose --env-file .env -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose --env-file .env -f infrastructure/docker/docker-compose.yml down",
+    "docker:logs": "docker compose --env-file .env -f infrastructure/docker/docker-compose.yml logs -f",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "clean": "pnpm -r exec rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.4.5"
+  }
+}

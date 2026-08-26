@@ -1,0 +1,280 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ContentType {
+  ANIME
+  DONGHUA
+}
+
+enum ContentStatus {
+  ONGOING
+  COMPLETED
+  UPCOMING
+  HIATUS
+}
+
+enum ProviderStatus {
+  ONLINE
+  DEGRADED
+  OFFLINE
+  DISABLED
+}
+
+enum StreamFormat {
+  HLS
+  MP4
+  DASH
+}
+
+enum VideoCodec {
+  H264
+  H265
+  VP9
+  AV1
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String?         @unique
+  username      String          @unique
+  passwordHash  String?
+  avatarUrl     String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  devices       Device[]
+  favorites     Favorite[]
+  watchProgress WatchProgress[]
+  watchHistory  WatchHistory[]
+
+  @@map("users")
+}
+
+model Device {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  deviceId       String    @unique @map("device_id")
+  deviceName     String    @map("device_name")
+  platform       String    @default("ANDROID_TV")
+  androidVersion Int       @map("android_version")
+  sdk            Int
+  abi            String
+  lastSeenAt     DateTime  @default(now()) @map("last_seen_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("devices")
+}
+
+model Content {
+  id            String          @id @default(cuid())
+  slug          String          @unique
+  title         String
+  nativeTitle   String?         @map("native_title")
+  altTitles     String[]        @default([]) @map("alt_titles")
+  type          ContentType     @default(ANIME)
+  status        ContentStatus   @default(ONGOING)
+  releaseYear   Int?            @map("release_year")
+  synopsis      String?         @db.Text
+  rating        Float?          @default(0.0)
+  posterUrl     String?         @map("poster_url")
+  backdropUrl   String?         @map("backdrop_url")
+  totalEpisodes Int             @default(0) @map("total_episodes")
+  isFeatured    Boolean         @default(false) @map("is_featured")
+  popularity    Int             @default(0)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  genres        ContentGenre[]
+  episodes      Episode[]
+  sources       ContentSource[]
+  favorites     Favorite[]
+  watchProgress WatchProgress[]
+  watchHistory  WatchHistory[]
+
+  @@index([type, status])
+  @@index([popularity(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("contents")
+}
+
+model Genre {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  slug      String         @unique
+  contents  ContentGenre[]
+
+  @@map("genres")
+}
+
+model ContentGenre {
+  contentId String  @map("content_id")
+  genreId   String  @map("genre_id")
+
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  genre     Genre   @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([contentId, genreId])
+  @@map("content_genres")
+}
+
+model Episode {
+  id              String           @id @default(cuid())
+  contentId       String           @map("content_id")
+  episodeNumber   Float            @map("episode_number")
+  title           String?
+  slug            String           @unique
+  durationSeconds Int?             @map("duration_seconds")
+  thumbnailUrl    String?          @map("thumbnail_url")
+  airDate         DateTime?        @map("air_date")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  content         Content          @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  sources         EpisodeSource[]
+  subtitles       Subtitle[]
+  watchProgress   WatchProgress[]
+  watchHistory    WatchHistory[]
+
+  @@index([contentId, episodeNumber])
+  @@map("episodes")
+}
+
+model Provider {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  slug            String          @unique
+  type            String          @default("HTML_SCRAPER")
+  status          ProviderStatus  @default(ONLINE)
+  priority        Int             @default(1)
+  baseUrl         String          @map("base_url")
+  supportsAnime   Boolean         @default(true) @map("supports_anime")
+  supportsDonghua Boolean         @default(false) @map("supports_donghua")
+  failureCount    Int             @default(0) @map("failure_count")
+  lastCheckedAt   DateTime?       @map("last_checked_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  contentSources  ContentSource[]
+  episodeSources  EpisodeSource[]
+
+  @@map("providers")
+}
+
+model ContentSource {
+  id             String    @id @default(cuid())
+  contentId      String    @map("content_id")
+  providerId     String    @map("provider_id")
+  externalId     String    @map("external_id")
+  externalUrl    String    @map("external_url")
+  rawMetadata    Json?     @map("raw_metadata")
+  lastSyncedAt   DateTime  @default(now()) @map("last_synced_at")
+
+  content        Content   @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  provider       Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, externalId])
+  @@map("content_sources")
+}
+
+model EpisodeSource {
+  id              String            @id @default(cuid())
+  episodeId       String            @map("episode_id")
+  providerId      String            @map("provider_id")
+  externalId      String            @map("external_id")
+  externalUrl     String            @map("external_url")
+  lastSyncedAt    DateTime          @default(now()) @map("last_synced_at")
+
+  episode         Episode           @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  provider        Provider          @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  playbackSources PlaybackSource[]
+
+  @@unique([providerId, externalId])
+  @@map("episode_sources")
+}
+
+model PlaybackSource {
+  id              String        @id @default(cuid())
+  episodeSourceId String        @map("episode_source_id")
+  serverName      String        @map("server_name")
+  streamUrl       String        @map("stream_url") @db.Text
+  format          StreamFormat  @default(HLS)
+  codec           VideoCodec    @default(H264)
+  quality         String        @default("720p")
+  headers         Json?
+  priority        Int           @default(1)
+  isHealthy       Boolean       @default(true) @map("is_healthy")
+  lastTestedAt    DateTime?     @map("last_tested_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  episodeSource   EpisodeSource @relation(fields: [episodeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("playback_sources")
+}
+
+model Subtitle {
+  id           String   @id @default(cuid())
+  episodeId    String   @map("episode_id")
+  language     String   @default("Indonesian")
+  languageCode String   @default("id") @map("language_code")
+  format       String   @default("VTT")
+  url          String   @db.Text
+  isDefault    Boolean  @default(true) @map("is_default")
+
+  episode      Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@map("subtitles")
+}
+
+model WatchProgress {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  contentId       String   @map("content_id")
+  episodeId       String   @map("episode_id")
+  positionSeconds Int      @default(0) @map("position_seconds")
+  durationSeconds Int      @default(0) @map("duration_seconds")
+  completed       Boolean  @default(false)
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content         Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  episode         Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("watch_progress")
+}
+
+model WatchHistory {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  contentId  String   @map("content_id")
+  episodeId  String   @map("episode_id")
+  watchedAt  DateTime @default(now()) @map("watched_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  episode    Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, watchedAt(sort: Desc)])
+  @@map("watch_history")
+}
+
+model Favorite {
+  userId    String   @map("user_id")
+  contentId String   @map("content_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, contentId])
+  @@map("favorites")
+}

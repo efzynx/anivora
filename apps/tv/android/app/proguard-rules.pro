@@ -1,0 +1,4 @@
+-dontwarn com.facebook.react.**
+-keep class com.facebook.react.** { *; }
+-keep class androidx.media3.** { *; }
+-keep class com.anivora.tv.** { *; }
