@@ -14,11 +14,18 @@ fi
 
 if ! command -v go &> /dev/null; then
     echo "Go belum terinstall. Menginstall Go..."
-    wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
-    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+    ARCH=$(uname -m)
+    case $ARCH in
+        x86_64) GO_ARCH="amd64" ;;
+        aarch64|arm64) GO_ARCH="arm64" ;;
+        armv7l|armv6l) GO_ARCH="armv6l" ;;
+        *) echo "Arsitektur tidak didukung"; exit 1 ;;
+    esac
+    wget https://go.dev/dl/go1.22.0.linux-${GO_ARCH}.tar.gz
+    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.22.0.linux-${GO_ARCH}.tar.gz
     export PATH=$PATH:/usr/local/go/bin
     echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile
-    rm go1.22.0.linux-amd64.tar.gz
+    rm go1.22.0.linux-${GO_ARCH}.tar.gz
 fi
 
 # 2. Setup Repository
