@@ -148,7 +148,7 @@ class ProviderHomeScreen extends ConsumerWidget {
                               gradient: LinearGradient(
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
-                                colors: [Colors.black.withValues(alpha: 0.9), Colors.transparent],
+                                colors: [Colors.black.withOpacity(0.9), Colors.transparent],
                               ),
                             ),
                             child: Text(

@@ -74,22 +74,22 @@ class HomeScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.7)],
+                              colors: [AppTheme.primaryColor, AppTheme.primaryColor.withOpacity(0.7)],
                             ),
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                color: AppTheme.primaryColor.withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const Icon(Icons.grid_view_rounded, color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
-                              const Text(
+                              Icon(Icons.grid_view_rounded, color: Colors.white, size: 18),
+                              SizedBox(width: 8),
+                              Text(
                                 'All Donghua',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -111,22 +111,22 @@ class HomeScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.blueAccent, Colors.blueAccent.withValues(alpha: 0.7)],
+                              colors: [Colors.blueAccent, Colors.blueAccent.withOpacity(0.7)],
                             ),
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.blueAccent.withValues(alpha: 0.3),
+                                color: Colors.blueAccent.withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const Icon(Icons.public, color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
-                              const Text(
+                              Icon(Icons.public, color: Colors.white, size: 18),
+                              SizedBox(width: 8),
+                              Text(
                                 'Web Providers',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -264,7 +264,7 @@ class HomeScreen extends ConsumerWidget {
                               gradient: LinearGradient(
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
-                                colors: [Colors.black.withValues(alpha: 0.9), Colors.transparent],
+                                colors: [Colors.black.withOpacity(0.9), Colors.transparent],
                               ),
                             ),
                             padding: const EdgeInsets.all(8),

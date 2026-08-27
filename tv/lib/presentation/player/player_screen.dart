@@ -385,12 +385,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                                 padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
                                   color: Colors.deepPurpleAccent
-                                      .withValues(alpha: 0.8),
+                                      .withOpacity(0.8),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.deepPurpleAccent
-                                          .withValues(alpha: 0.4),
+                                          .withOpacity(0.4),
                                       blurRadius: 20,
                                       spreadRadius: 5,
                                     )
@@ -447,7 +447,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                                             boxShadow: [
                                               BoxShadow(
                                                 color: Colors.deepPurpleAccent
-                                                    .withValues(alpha: 0.6),
+                                                    .withOpacity(0.6),
                                                 blurRadius: 8,
                                               )
                                             ],

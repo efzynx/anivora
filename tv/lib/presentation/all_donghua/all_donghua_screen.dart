@@ -88,7 +88,7 @@ class _AllDonghuaScreenState extends ConsumerState<AllDonghuaScreen> {
   Widget _buildHeader(BuildContext context, AllDonghuaState state) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundDark,
         border: Border(bottom: BorderSide(color: Colors.white12, width: 1)),
       ),
@@ -139,11 +139,11 @@ class _AllDonghuaScreenState extends ConsumerState<AllDonghuaScreen> {
                 color: _showSearch ? AppTheme.primaryColor : Colors.white10,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.search, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  SizedBox(width: 8),
+                  Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -195,7 +195,7 @@ class _AllDonghuaScreenState extends ConsumerState<AllDonghuaScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppTheme.primaryColor, width: 1.5),
+            borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
@@ -239,7 +239,7 @@ class _AllDonghuaScreenState extends ConsumerState<AllDonghuaScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.movie_outlined, color: Colors.white24, size: 64),
+            const Icon(Icons.movie_outlined, color: Colors.white24, size: 64),
             const SizedBox(height: 16),
             Text(
               state.searchQuery.isNotEmpty ? 'Tidak ada hasil untuk "${state.searchQuery}"' : 'Belum ada donghua',
