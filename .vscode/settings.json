@@ -1,3 +1,7 @@
 {
-    "java.compile.nullAnalysis.mode": "disabled"
+    "java.compile.nullAnalysis.mode": "disabled",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk",
+    "java.home": "/usr/lib/jvm/java-17-openjdk",
+    "gradle.java.home": "/usr/lib/jvm/java-17-openjdk"
 }

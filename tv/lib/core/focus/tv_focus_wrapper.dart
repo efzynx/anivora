@@ -90,7 +90,7 @@ class _TvFocusWrapperState extends State<TvFocusWrapper> {
           boxShadow: _isFocused
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.5),
+                    color: AppTheme.primaryColor.withOpacity(0.5),
                     blurRadius: 12.0,
                     spreadRadius: 2.0,
                   )

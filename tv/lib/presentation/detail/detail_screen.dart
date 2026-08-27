@@ -47,8 +47,8 @@ class DetailScreen extends ConsumerWidget {
                     gradient: LinearGradient(
                       colors: [
                         AppTheme.backgroundDark,
-                        AppTheme.backgroundDark.withValues(alpha: 0.8),
-                        AppTheme.backgroundDark.withValues(alpha: 0.3),
+                        AppTheme.backgroundDark.withOpacity(0.8),
+                        AppTheme.backgroundDark.withOpacity(0.3),
                       ],
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
@@ -130,7 +130,7 @@ class DetailScreen extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                                    color: AppTheme.primaryColor.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: AppTheme.primaryColor),
                                   ),
