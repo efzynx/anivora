@@ -1,4 +1,4 @@
-package com.example.tv
+package com.anivora.efzyn.my.id.tv
 
 import io.flutter.embedding.android.FlutterActivity
 
