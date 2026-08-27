@@ -62,7 +62,8 @@ dev_dependencies:
 # win32 hanya dipakai untuk Windows build, aman di-override ke ^6.0.0 untuk Android.
 dependency_overrides:
   wakelock_plus: 1.1.4
-  win32: ^6.0.0  # cegah downgrade package_info_plus akibat wakelock_plus 1.1.4
+  package_info_plus: ^10.2.1 # Cegah downgrade oleh wakelock_plus 1.1.4 yang constraint-nya <6.0.0
+  win32: ^6.4.0              # Paksa wakelock_plus 1.1.4 menerima win32 versi 6.x
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
