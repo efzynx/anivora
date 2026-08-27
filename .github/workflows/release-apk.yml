@@ -54,6 +54,14 @@ jobs:
                 project.android.packagingOptions.jniLibs.useLegacyPackaging = true
                 println(">>> [android-patch] ${project.name}: useLegacyPackaging=true")
               }
+              // wakelock_plus 1.1.4 menggunakan compileSdk=33, tapi AndroidX dependencies-nya
+              // (core-ktx 1.13.1, fragment 1.7.1, dll) butuh compileSdk 34+.
+              // Override compileSdk=36 HANYA untuk wakelock_plus agar tidak mempengaruhi
+              // package_info_plus atau library lain yang sudah menggunakan compileSdk yang tepat.
+              if (project.name == "wakelock_plus") {
+                project.android.compileSdk = 36
+                println(">>> [android-patch] wakelock_plus: compileSdk=36 (override for AndroidX compat)")
+              }
             }
           }
           GRADLE_INIT_EOF

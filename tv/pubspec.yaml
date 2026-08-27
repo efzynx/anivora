@@ -52,6 +52,18 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# FIX CRASH Android 6 (API 23): wakelock_plus 1.7.0 memanggil Configuration.getLocales()
+# yang baru ada di API 24 → crash "NoSuchMethodError: getLocales()" di Android 6.
+# Solusi: pin ke 1.1.4 yang masih kompatibel API 23.
+#
+# Masalah chain: wakelock_plus 1.1.4 memerlukan win32 ^5.x (untuk Windows support),
+# sedangkan package_info_plus 10.x butuh win32 ^6.x. Tanpa override win32,
+# pub solver akan downgrade package_info_plus ke 4.2.0 yang gagal compile Kotlin.
+# win32 hanya dipakai untuk Windows build, aman di-override ke ^6.0.0 untuk Android.
+dependency_overrides:
+  wakelock_plus: 1.1.4
+  win32: ^6.0.0  # cegah downgrade package_info_plus akibat wakelock_plus 1.1.4
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
