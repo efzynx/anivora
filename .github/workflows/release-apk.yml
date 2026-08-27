@@ -46,6 +46,15 @@ jobs:
                 project.android.defaultConfig.minSdk = 23
                 println(">>> [android-patch] ${project.name}: minSdk=23")
               }
+              if (isAndroidLib) {
+                // Override compileSdk ke 36 untuk semua library.
+                // Diperlukan untuk wakelock_plus 1.1.4 yang hanya punya compileSdk=33
+                // tapi AndroidX dependencies-nya butuh compileSdk 34+.
+                // wakelock_plus 1.1.4 digunakan karena 1.7.0 menggunakan
+                // WindowInsetsController (API 30+) yang tidak ada di Android 6.
+                project.android.compileSdk = 36
+                println(">>> [android-patch] ${project.name}: compileSdk=36")
+              }
               if (isAndroidApp) {
                 // Gunakan legacy packaging agar native libs diekstrak ke disk saat install.
                 // Diperlukan untuk firmware Android 6 pada STB (HG680P/Amlogic S905X).

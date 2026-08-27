@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tv"
+    namespace = "com.anivora.efzyn.my.id.tv"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.tv"
+        applicationId = "com.anivora.efzyn.my.id.tv"
         // Hardcode minSdk 21 agar kompatibel dengan STB Android 6 (API 23) seperti HG680P
         // flutter.minSdkVersion di Flutter versi baru sudah naik ke API 24
         minSdk = 21
