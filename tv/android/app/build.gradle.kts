@@ -1,9 +1,19 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
     namespace = "com.anivora.efzyn.my.id.tv"
@@ -21,8 +31,8 @@ android {
         // flutter.minSdkVersion di Flutter versi baru sudah naik ke API 24
         minSdk = 21
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode()
-        versionName = flutter.versionName()
+        versionCode = flutterVersionCode.toInt()
+        versionName = flutterVersionName
         multiDexEnabled = true
     }
 
