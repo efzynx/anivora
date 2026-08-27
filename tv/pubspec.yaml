@@ -52,13 +52,6 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
-# wakelock_plus 1.7.0 crash di Android 6 karena menggunakan WindowInsetsController (API 30+).
-# Pin ke 1.1.4 yang menggunakan FLAG_KEEP_SCREEN_ON (kompatibel API 21+).
-# Build error "compileSdk 33 < 34 required" diatasi oleh Gradle Init Script
-# yang override compileSdk=36 untuk semua library projects.
-dependency_overrides:
-  wakelock_plus: 1.1.4
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
